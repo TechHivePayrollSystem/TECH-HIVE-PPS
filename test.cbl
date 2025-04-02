@@ -1,10 +1,7 @@
-      ******************************************************************
-      * Author:
-      * Date:
-      * Purpose: The main admin user-login
-      ******************************************************************
+
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. Tech-hive.
+       PROGRAM-ID. PAYROLL-SYSTEM.
+       AUTHOR. TECH-HIVE.
                     *>  ENVIRONMENT DIVION BEGINS HERE
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -46,4 +43,4 @@
            WRITE ADMIN-RECORD.
            DISPLAY "ADMIN REGISTERED SUCCESSFULY"
             STOP RUN.
-       END PROGRAM Tech-hive.
+       END PROGRAM PAYROLL-SYSTEM.
