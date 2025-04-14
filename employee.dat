@@ -1,8 +1,0 @@
-Field Name        | Format       | Description
--------------------------------------------------
-EMP-ID            | PIC 9(5)     | Unique employee ID
-EMP-NAME          | PIC X(30)    | Employee name
-EMP-HOURLY        | PIC 9(3)V99  | Hourly rate
-EMP-DEPT          | PIC X(20)    | Department
-EMP-LEAVE-BAL     | PIC 999      | Remaining leave days
-EMP-STATUS        | PIC X(10)    | Active/Inactive
