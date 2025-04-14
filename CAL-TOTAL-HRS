@@ -1,0 +1,95 @@
+      ******************************************************************
+      * Author:
+      * Date:
+      * Purpose:
+      * Tectonics: cobc
+      ******************************************************************
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. YOUR-PROGRAM-NAME.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 EMPLY-DATA.
+           05 EMP-NME PIC X(20).
+           05 HRLY-RATE PIC 9(05)V99.
+           05 DAILY-HRS  OCCURS 7 TIMES PIC 99V99.
+           05 MONTOSSUN PIC X(21) VALUE "MONTUEWEDTHUFRISATSUN".
+       01 WS-CONSTANTS.
+           05 OVERTIME-RATE PIC V9(2) VALUE .5.
+           05 REGULAR-HOURS PIC 99 VALUE 40.
+           05 WEEKS-IN-MONTH PIC 99 VALUE 4.
+
+       01 WS-CALCULATIONS.
+           05 TOTAL-HOURS PIC 999V9.
+           05 OVERTIME-HOURS PIC 999V99.
+           05 REGULAR-PAY PIC 9(5)V99.
+           05 OVERTIME-PAY PIC 9(5)V99.
+           05 WEEKLY-PAY PIC 9(5)V99.
+           05 MONTHLY-PAY PIC 9(6)V99.
+           05 I PIC 99.    
+       01 WS-DISPLAY-LINES.
+           05 HEADER-LINE.
+               10 FILLER PIC X(20) VALUE "EMPLOYEE SALARY CALC".
+               10 FILLER PIC X(20) VALUE "ULATOR".
+           05 NAME-PROMPT PIC X(20) VALUE "ENTER EMPLOYEE:".
+           05 RATE-PROMPT PIC X(30) VALUE "ENTER HOURLY RATE".
+           05 HOURS-PROMPT PIC X(30) VALUE "ENTER HOURS FOR DAY: ".
+           05 RESULT-LINE.
+               10 FILLER PIC X(10) VALUE "NAME: ".
+               10 RES-NAME PIC 9(20).
+               10 FILLER PIC X(10) VALUE "TOTAL HRS".
+               10 RES-HOURS PIC ZZ9.99.
+               10 FILLER PIC X(05) VALUE "HRS".
+           05 PAY-LINE.
+               10 FILLER PIC X(10) VALUE "WEEKLY: ".
+               10 RES-WEEKLY PIC ZZ,ZZ9.99.
+               10 FILLER PIC X(10) VALUE "MONTHLY: ".
+               10 RES-MONTHLY PIC $ZZ,ZZ9.99.
+           
+           
+       PROCEDURE DIVISION.
+       000-PROCEDURE.
+           PERFORM 100-DISPLAY-HEADER.
+           PERFORM 200-GET-EMPLOYEE-DATA.
+           PERFORM 300-CALCULATE-HOURS.
+           PERFORM 400-CALCULATE-PAY.
+           PERFORM 500-DISPLAY-RESULTS.
+           STOP RUN.
+           100-DISPLAY-HEADER.
+               DISPLAY HEADER-LINE.
+               DISPLAY SPACES.
+           200-GET-EMPLOYEE-DATA.
+               DISPLAY NAME-PROMPT.
+               ACCEPT EMP-NME.
+               DISPLAY RATE-PROMPT.
+               ACCEPT HRLY-RATE.
+               PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
+           DISPLAY HOURS-PROMPT(1:18) MONTOSSUN ((I - 1) * 3 + 1:3) ": "
+           ACCEPT DAILY-HRS (I)
+           END-PERFORM.
+           300-CALCULATE-HOURS.
+               MOVE 0 TO TOTAL-HOURS.
+               PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
+               ADD DAILY-HRS(I) TO TOTAL-HOURS
+               END-PERFORM.
+            IF TOTAL-HOURS > REGULAR-HOURS
+                COMPUTE OVERTIME-HOURS = TOTAL-HOURS - REGULAR-HOURS
+                ELSE 
+                    MOVE 0 TO OVERTIME-HOURS.
+           400-CALCULATE-PAY.
+               COMPUTE REGULAR-PAY = REGULAR-HOURS * HRLY-RATE.
+           COMPUTE OVERTIME-PAY = OVERTIME-HOURS * HRLY-RATE 
+                                     * (1 + OVERTIME-RATE).
+           COMPUTE WEEKLY-PAY = REGULAR-HOURS + OVERTIME-PAY.
+           COMPUTE MONTHLY-PAY = WEEKLY-PAY * WEEKS-IN-MONTH.
+           500-DISPLAY-RESULTS.
+               DISPLAY SPACES.
+               MOVE EMP-NME TO RES-NAME.
+               MOVE TOTAL-HOURS TO RES-NAME.
+               DISPLAY RESULT-LINE.
+               MOVE WEEKLY-PAY TO RES-WEEKLY.
+               MOVE MONTHLY-PAY TO RES-MONTHLY.
+               DISPLAY PAY-LINE.
+           
+            *>DISPLAY "Hello wrld"
+            STOP RUN.
+       END PROGRAM YOUR-PROGRAM-NAME.
