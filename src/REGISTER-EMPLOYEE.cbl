@@ -3,11 +3,11 @@ PROGRAM-ID. REGISTER-EMPLOYEE.
 ENVIRONMENT DIVISION.
 INPUT-OUTPUT SECTION.
 FILE-CONTROL.
-    SELECT EMPLOYEE-FILE ASSIGN TO "./employee.dat"
+    SELECT EMPLOYEE-FILE ASSIGN TO "data/employee.dat"
         ORGANIZATION IS INDEXED
         ACCESS MODE IS DYNAMIC
         RECORD KEY IS EMP-ID
-        FILE STATUS IS FS-STATUS. *> Added FILE STATUS clause
+        FILE STATUS IS FS-EMPLOYEE.
 
 DATA DIVISION.
 FILE SECTION.
@@ -27,38 +27,35 @@ WORKING-STORAGE SECTION.
     05  WS-HOURLY-RATE   PIC 9(3)V99.
     05  WS-DEPT          PIC X(20).
     05  WS-LEAVE-BAL     PIC 999.
-
-01  FS-STATUS           PIC XX. *> Declare FILE STATUS variable
-    88  FILE-NOT-FOUND   VALUE "35". *> Condition for missing file
+01  FS-EMPLOYEE         PIC XX.  *> File status
 
 PROCEDURE DIVISION.
     PERFORM CHECK-FILE-EXISTENCE
+    DISPLAY "--------------------------------------------------"
     DISPLAY "EMPLOYEE REGISTRATION SYSTEM"
-    DISPLAY "-----------------------------"
+    DISPLAY "--------------------------------------------------"
     PERFORM GET-EMPLOYEE-DETAILS
     PERFORM WRITE-TO-FILE
     CLOSE EMPLOYEE-FILE
-    EXIT PROGRAM.
+    STOP RUN.
 
 CHECK-FILE-EXISTENCE.
     OPEN I-O EMPLOYEE-FILE
-    IF FILE-NOT-FOUND *> Use condition name for clarity
-        DISPLAY "File not found. Creating new file..."
-        OPEN OUTPUT EMPLOYEE-FILE
+    IF FS-EMPLOYEE NOT = "00"  *> File not found
+        OPEN OUTPUT EMPLOYEE-FILE  *> Create new file
         CLOSE EMPLOYEE-FILE
         OPEN I-O EMPLOYEE-FILE
-        DISPLAY "File created successfully."
     END-IF.
 
 GET-EMPLOYEE-DETAILS.
     DISPLAY "Enter Employee ID (5 digits): "
-    ACCEPT WS-EMP-ID
+    ACCEPT WS-EMP-ID.
     DISPLAY "Enter Employee Name: "
-    ACCEPT WS-EMP-NAME
+    ACCEPT WS-EMP-NAME.
     DISPLAY "Enter Hourly Rate: "
-    ACCEPT WS-HOURLY-RATE
+    ACCEPT WS-HOURLY-RATE.
     DISPLAY "Enter Department: "
-    ACCEPT WS-DEPT
+    ACCEPT WS-DEPT.
     DISPLAY "Enter Initial Leave Balance: "
     ACCEPT WS-LEAVE-BAL.
 
