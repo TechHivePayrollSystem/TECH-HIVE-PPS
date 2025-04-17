@@ -5,91 +5,356 @@
       * Tectonics: cobc
       ******************************************************************
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. YOUR-PROGRAM-NAME.
+       PROGRAM-ID. HIVE-HOLDINGS-PAYROLL.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
+       01 THE-UI.
+           05 HD-LINE.
+               10 FILLER PIC X(10) VALUE "==========".
+               10 FILLER PIC X(20) VALUE "HIVE PAYROLL".
+               10 FILLER PIC X(20) VALUE "==========".
+           05 FOOTER-LINE PIC X(40) VALUE "===========================".
+           05 DEVIDER-LINE PIC X(100) VALUE " ----------------------- ".
+
+              *> ========== EMPLOYEE DATA ==========
        01 EMPLY-DATA.
            05 EMP-NME PIC X(20).
            05 HRLY-RATE PIC 9(05)V99.
-           05 DAILY-HRS  OCCURS 7 TIMES PIC 99V99.
-           05 MONTOSSUN PIC X(21) VALUE "MONTUEWEDTHUFRISATSUN".
+      *>      05 DAILY-HRS  OCCURS 7 TIMES PIC 99V99.
+           05 WORK-PATTERN PIC 9.
+             88 STANDARD-WORKER VALUE 1.
+             88 SHIFT-WORKER VALUE 2.
+             88 FLEXI-WORKER VALUE 3.
+      *>      05 OVERTIME-FLAG OCCURS 7 TIMES PIC X.
+      *>        88 OVERTIME-WORKED VALUE 'Y', 'y'.
+           05 MEDICAL-AID PIC 9(5)V99.
+           05 PENSION-PERC PIC 99V99.
+      *>      05 MONTOSSUN PIC X(21) VALUE "MONTUEWEDTHUFRISATSUN".
+           05 AUTO-OVERTIME PIC 9(3)V99.
+
+                *> ========== CONSTANTS ==========
+
        01 WS-CONSTANTS.
-           05 OVERTIME-RATE PIC V9(2) VALUE .5.
-           05 REGULAR-HOURS PIC 99 VALUE 40.
+      *>      05 OVERTIME-RATE PIC V9(2) VALUE .5.
+           05 REGULAR-HOURS PIC 99 VALUE 8.
+      *>      05 MAX-OVERTIME PIC 99 VALUE 3.
+           05 STANDARD-WEEK PIC 99 VALUE 40.
            05 WEEKS-IN-MONTH PIC 99 VALUE 4.
+           05 UIF-RATE PIC V999 VALUE 0.010.
+           05 SDL-RATE PIC V999 VALUE 0.010.
+           05 PENSION-CAP PIC 9(6)V99 VALUE 350000.00.
+           05 OT-MULTIPLIERS.
+               10 WEEKDAY-OT PIC 9V99 VALUE 1.5.
+               10 WEEKEND-OT PIC 9V99 VALUE 2.0.
+               10 HOLIDAY-OT PIC 9V99 VALUE 2.5.
+       01 WS-TAX-BRACKETS.
+           05 TAX-THRESHOLD PIC 9(6)V99 VALUE 95750.00.
+           05 TAX-RATE PIC V999 VALUE .18.
+           05 REBATE PIC 9(4)V99 VALUE 1680.00.
+
+               *> ========== CALCULATIONS ==========
 
        01 WS-CALCULATIONS.
-           05 TOTAL-HOURS PIC 999V9.
+           05 BASE-HOURS PIC 999V99 VALUE 160.00.
+           05 TOTAL-HOURS PIC 999V99.
            05 OVERTIME-HOURS PIC 999V99.
+           05 GROSS-PAY PIC 9(6)V99.
            05 REGULAR-PAY PIC 9(5)V99.
            05 OVERTIME-PAY PIC 9(5)V99.
-           05 WEEKLY-PAY PIC 9(5)V99.
+      *>      05 WEEKLY-PAY PIC 9(5)V99.
            05 MONTHLY-PAY PIC 9(6)V99.
-           05 I PIC 99.    
+           05 ANNUAL-PAY PIC 9(7)V99.
+           05 PAYE-TAX PIC 9(6)V99.
+           05 UIF-CONTRIB PIC 9(6)V99.
+           05 SDL-CONTRIB PIC 9(6)V99.
+           05 PENSION-CONTRIB PIC 9(6)V99.
+           05 TOTAL-DEDUCTIONS PIC 9(6)V99.
+           05 NET-PAY PIC 9(6)V99.
+      *>      05 I PIC 99.
+
+             *> ========== MODERN DISPLAY ==========
+
        01 WS-DISPLAY-LINES.
-           05 HEADER-LINE.
-               10 FILLER PIC X(20) VALUE "EMPLOYEE SALARY CALC".
-               10 FILLER PIC X(20) VALUE "ULATOR".
-           05 NAME-PROMPT PIC X(20) VALUE "ENTER EMPLOYEE:".
-           05 RATE-PROMPT PIC X(30) VALUE "ENTER HOURLY RATE".
-           05 HOURS-PROMPT PIC X(30) VALUE "ENTER HOURS FOR DAY: ".
            05 RESULT-LINE.
-               10 FILLER PIC X(10) VALUE "NAME: ".
-               10 RES-NAME PIC 9(20).
-               10 FILLER PIC X(10) VALUE "TOTAL HRS".
+               10 FILLER PIC X(30) VALUE " EMPLOYEE:  ".
+      *>          10 FILLER PIC X(20) VALUE " R (ZAR)      ".
+               10 RES-NAME PIC X(20).
+               10 FILLER PIC X(10) VALUE "| HOURS".
                10 RES-HOURS PIC ZZ9.99.
                10 FILLER PIC X(05) VALUE "HRS".
-           05 PAY-LINE.
-               10 FILLER PIC X(10) VALUE "WEEKLY: ".
-               10 RES-WEEKLY PIC ZZ,ZZ9.99.
-               10 FILLER PIC X(10) VALUE "MONTHLY: ".
-               10 RES-MONTHLY PIC $ZZ,ZZ9.99.
-           
-           
+
+           05 PAY-LINES.
+               10 GROSS-LINES.
+                   15 FILLER PIC X(20) VALUE "GROSS PAY:   R".
+                   15 GROSS-AMT PIC Z,ZZZ,ZZ9.99.
+               10 OT-LINE.
+                   15 FILLER PIC X(20) VALUE "OVERTIME:    R".
+                   15 OT-AMT PIC ZZ,ZZ9.99.
+                   15 FILLER PIC X(10) VALUE " (".
+                   15 OT-HRS PIC Z9.99.
+                   15 FILLER PIC X(05) VALUE "HRS".
+                   15 FILLER PIC X(10) VALUE " )".
+               10 DEDUCT-LINE.
+                   15 FILLER PIC X(20) VALUE "DEDUCTIONS:  R".
+                   15 DEDUCT-AMT PIC  Z,ZZZ,ZZ9.99.
+               10 NET-LINE.
+                   15 FILLER PIC X(20) VALUE "NET PAY:     R".
+                   15 NET-AMT PIC Z,ZZZ,ZZ9.99.
+
+       *>          PAY-LINE
+      *>      05 NAME-PROMPT PIC X(20) VALUE "ENTER EMPLOYEE:".
+      *>      05 RATE-PROMPT PIC X(30) VALUE "ENTER HOURLY RATE (ZAR)".
+      *>      05 MEDICAL-PROMPT PIC X(30) VALUE "MEDICAL AID (ZAR/MONTH)".
+      *>      05 PENSION-PROMPT PIC X(30) VALUE "PENSION % (0 IF NONE)".
+      *>      05 OVT-PROMPT PIC X(40) VALUE
+      *>        "OVERTIME WORKED ON A DAY (Y/N)    ".
+      *>      05 HOURS-PROMPT PIC X(30) VALUE "ENTER HOURS FOR DAY: ".
+
+      *>      05 RESULT-LINE.
+      *>          10 FILLER PIC X(30) VALUE "NAME:   ".
+      *>          10 RES-NAME PIC X(20).
+      *>          10 FILLER PIC X(10) VALUE " HOURS  ".
+      *>          10 RES-HOURS PIC ZZ9.99.
+      *>          10 FILLER PIC X(05) VALUE "HRS".
+      *>      05 GROSS-LINE.
+      *>          10 FILLER PIC X(20) VALUE "GROSS PAY:        R".
+      *> *>          10 GROSS-AMT PIC Z,ZZZ,ZZ9.99.
+      *> *>      05 DEDUCT-LINE.
+      *>          10 FILLER PIC X(20) VALUE "DEDUCTIONS        R".
+      *>          10 DEDUCT-AMT PIC Z,ZZZ,ZZ9.99.
+      *>      05 NET-LINE.
+      *>          10 FILLER PIC X(20) VALUE "NET PAY           R".
+      *>          10 NET-AMT PIC Z,ZZZ,ZZ9.99.
+      *>      05 DETAIL-LINE.
+      *>          10 FILLER PIC X(20) VALUE "PAYE TAX:         R".
+      *>          10 PAYE-AMT PIC ZZ,ZZ9.99.
+      *>          10 FILLER PIC X(10) VALUE " UIF:    R".
+      *>          10 UIF-AMT PIC ZZ9.99.
+      *>          10 FILLER PIC X(10) VALUE "SDL:     R".
+      *>          10 SDL-AMT PIC ZZ9.99.
+      *>      05 BENEFIT-LINE.
+      *>          10 FILLER PIC X(20) VALUE "MEDICAL AID       R".
+      *>          10 MEDICAL-AMT PIC ZZ,ZZ9.99.
+      *>          10 FILLER PIC X(10) VALUE "PENSION R".
+      *>          10 PENSION-AMT PIC ZZ,ZZ9.99.
+      *>          05 PAY-LINE.
+      *>          10 FILLER PIC X(10) VALUE "WEEKLY: ".
+      *>          10 RES-WEEKLY PIC ZZ,ZZ9.99.
+      *>          10 FILLER PIC X(10) VALUE "MONTHLY: ".
+      *>          10 RES-MONTHLY PIC $ZZ,ZZ9.99.
+
+
        PROCEDURE DIVISION.
-       000-PROCEDURE.
+       000-MAIN.
            PERFORM 100-DISPLAY-HEADER.
            PERFORM 200-GET-EMPLOYEE-DATA.
-           PERFORM 300-CALCULATE-HOURS.
+           PERFORM 300-AUTO-CALCULATE-OT.
            PERFORM 400-CALCULATE-PAY.
-           PERFORM 500-DISPLAY-RESULTS.
+           PERFORM 500-CALCULATE-DEDUCTIONS.
+           PERFORM 600-DISPLAY-RESULTS.
            STOP RUN.
+
            100-DISPLAY-HEADER.
-               DISPLAY HEADER-LINE.
-               DISPLAY SPACES.
+               DISPLAY HD-LINE.
+               DISPLAY "| PAYROLL SYSTEM |"
+               DISPLAY DEVIDER-LINE.
+
+
            200-GET-EMPLOYEE-DATA.
-               DISPLAY NAME-PROMPT.
-               ACCEPT EMP-NME.
-               DISPLAY RATE-PROMPT.
-               ACCEPT HRLY-RATE.
-               PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
-           DISPLAY HOURS-PROMPT(1:18) MONTOSSUN ((I - 1) * 3 + 1:3) ": "
-           ACCEPT DAILY-HRS (I)
-           END-PERFORM.
-           300-CALCULATE-HOURS.
-               MOVE 0 TO TOTAL-HOURS.
-               PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
-               ADD DAILY-HRS(I) TO TOTAL-HOURS
-               END-PERFORM.
-            IF TOTAL-HOURS > REGULAR-HOURS
-                COMPUTE OVERTIME-HOURS = TOTAL-HOURS - REGULAR-HOURS
-                ELSE 
-                    MOVE 0 TO OVERTIME-HOURS.
+               DISPLAY "| EMPLOYEE NAME: "
+               ACCEPT EMP-NME
+               DISPLAY "  DAY RATE (ZAR): "
+               ACCEPT HRLY-RATE
+               DISPLAY "| OVERTIME-HOURS"
+               DISPLAY "|  [1] 3 - 5HRS"
+               DISPLAY "|  [2] 5 - 7 HRS"
+               DISPLAY "|  [3] 7+ HRS"
+               DISPLAY "| SELECT "
+               ACCEPT WORK-PATTERN
+               DISPLAY "| MEDICAL AID (ZAR): "
+               ACCEPT MEDICAL-AID
+               DISPLAY "| PENSION % (0-100): "
+               ACCEPT PENSION-PERC
+               DISPLAY DEVIDER-LINE.
+
+
+      *>          DISPLAY NAME-PROMPT.
+      *>          ACCEPT EMP-NME.
+      *>          DISPLAY RATE-PROMPT.
+      *>          ACCEPT HRLY-RATE.
+      *>          DISPLAY MEDICAL-PROMPT.
+      *>          ACCEPT MEDICAL-AID.
+      *>          DISPLAY PENSION-PROMPT.
+      *>          ACCEPT PENSION-PARK.
+
+
+      *>         PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
+      *>         MOVE REGULAR-HOURS TO DAILY-HRS(I)
+      *>         DISPLAY "FOR" MONTOSSUN((I - 1) * 3 + 1:3) ":"
+      *>         MOVE REGULAR-HOURS TO DAILY-HRS(I)
+      *>         DISPLAY OVT-PROMPT
+      *>         ACCEPT OVERTIME-FLAG(I)
+
+      *>         IF OVERTIME-WORKED(I)
+      *>             ADD MAX-OVERTIME TO DAILY-HRS(I)
+      *>             END-IF
+      *>             END-PERFORM.
+
+           300-AUTO-CALCULATE-OT.
+               EVALUATE TRUE
+               WHEN STANDARD-WORKER
+               COMPUTE AUTO-OVERTIME = (FUNCTION RANDOM * 3 ) + 5
+      *>          BETWEEN 3 - 5 HOURS
+               WHEN SHIFT-WORKER
+               COMPUTE AUTO-OVERTIME = (FUNCTION RANDOM * 5) + 10
+      *>          FROM 5 HRS - 7 HRS
+              WHEN FLEXI-WORKER
+              COMPUTE AUTO-OVERTIME = (FUNCTION RANDOM * 7 ) + 2
+      *>          FROM 7+ HRS
+               END-EVALUATE
+
+               COMPUTE TOTAL-HOURS = BASE-HOURS + AUTO-OVERTIME
+               COMPUTE OVERTIME-HOURS = AUTO-OVERTIME.
+
+      *>          MOVE 0 TO TOTAL-HOURS.
+      *>          MOVE 0 TO OVERTIME-HOURS.
+
+      *>          PERFORM VARYING I FROM 1 BY 1 UNTIL I > 7
+      *>          ADD DAILY-HRS(I) TO TOTAL-HOURS
+
+      *>          IF DAILY-HRS(I) > REGULAR-HOURS
+      *>              COMPUTE OVERTIME-HOURS = OVERTIME-HOURS +
+      *>              (DAILY-HRS(I) - REGULAR-HOURS)
+      *>              END-IF
+      *>              END-PERFORM.
+
            400-CALCULATE-PAY.
-               COMPUTE REGULAR-PAY = REGULAR-HOURS * HRLY-RATE.
-           COMPUTE OVERTIME-PAY = OVERTIME-HOURS * HRLY-RATE 
-                                     * (1 + OVERTIME-RATE).
-           COMPUTE WEEKLY-PAY = REGULAR-HOURS + OVERTIME-PAY.
-           COMPUTE MONTHLY-PAY = WEEKLY-PAY * WEEKS-IN-MONTH.
-           500-DISPLAY-RESULTS.
-               DISPLAY SPACES.
-               MOVE EMP-NME TO RES-NAME.
-               MOVE TOTAL-HOURS TO RES-NAME.
-               DISPLAY RESULT-LINE.
-               MOVE WEEKLY-PAY TO RES-WEEKLY.
-               MOVE MONTHLY-PAY TO RES-MONTHLY.
-               DISPLAY PAY-LINE.
-           
-            *>DISPLAY "Hello wrld"
+      *>          COMPUTE REGULAR-PAY = BASE-HOURS * HRLY-RATE
+      *>          COMPUTE OVERTIME-PAY
+      *>          = OVERTIME-HOURS * HRLY-RATE * WEEKDAY-OT
+      *>          COMPUTE MONTHLY-PAY = REGULAR-PAY + OVERTIME-PAY
+      *>          COMPUTE ANNUAL-PAY = MONTHLY-PAY * 12
+      *>          MOVE MONTHLY-PAY TO GROSS-PAY.
+
+               IF TOTAL-HOURS < BASE-HOURS
+                   COMPUTE REGULAR-HOURS = TOTAL-HOURS * HRLY-RATE
+                   ELSE
+                   COMPUTE REGULAR-HOURS = BASE-HOURS * HRLY-RATE
+                   END-IF.
+
+
+                   COMPUTE OVERTIME-PAY = OVERTIME-HOURS * HRLY-RATE
+                       * WEEKDAY-OT.
+
+                     COMPUTE MONTHLY-PAY = REGULAR-PAY + OVERTIME-PAY
+                     COMPUTE ANNUAL-PAY = MONTHLY-PAY * 12.
+
+
+                     MOVE MONTHLY-PAY TO GROSS-PAY.
+
+      *>          IF TOTAL-HOURS > STANDARD-WEEK
+      *>              COMPUTE REGULAR-PAY = STANDARD-WEEK * HRLY-RATE
+      *>              ELSE
+      *>                  COMPUTE REGULAR-PAY = TOTAL-HOURS * HRLY-RATE
+      *>              END-IF.
+      *>              COMPUTE OVERTIME-PAY = OVERTIME-HOURS * HRLY-RATE *
+      *>              (1 + OVERTIME-RATE).
+
+      *>              COMPUTE WEEKLY-PAY = REGULAR-PAY + OVERTIME-PAY.
+
+      *>              COMPUTE MONTHLY-PAY = WEEKLY-PAY * WEEKS-IN-MONTH.
+
+      *>              COMPUTE ANNUAL-PAY = MONTHLY-PAY * 12.
+
+      *>              MOVE MONTHLY-PAY TO GROSS-PAY.
+
+
+           500-CALCULATE-DEDUCTIONS.
+           IF ANNUAL-PAY > TAX-THRESHOLD
+           COMPUTE PAYE-TAX = ((ANNUAL-PAY - TAX-THRESHOLD) * TAX-RATE)
+            -  REBATE
+             IF PAYE-TAX < 0
+                 MOVE 0 TO PAYE-TAX
+                 END-IF.
+      *>                 UIF CONTRIBUTION
+           COMPUTE UIF-CONTRIB = GROSS-PAY * UIF-RATE.
+           IF UIF-CONTRIB > 177.12
+               MOVE 177.12 TO UIF-CONTRIB
+               END-IF.
+
+      *>              SDL CONTRIBUTION
+           COMPUTE SDL-CONTRIB = GROSS-PAY * SDL-RATE.
+
+      *>           PENSION CONTRIBUTION
+           IF PENSION-PERC > 0
+             COMPUTE PENSION-CONTRIB = (GROSS-PAY * PENSION-PERC) / 100
+             IF PENSION-CONTRIB > (PENSION-CAP / 12)
+                 COMPUTE PENSION-CONTRIB = PENSION-CAP / 12
+                 END-IF
+               ELSE
+                   MOVE 0 TO PENSION-CONTRIB
+                   END-IF.
+      *>                TOTAL TOTAL-DEDUCTIONS
+           COMPUTE TOTAL-DEDUCTIONS = PAYE-TAX + UIF-CONTRIB +
+              SDL-CONTRIB + PENSION-CONTRIB + MEDICAL-AID.
+
+           COMPUTE NET-PAY = GROSS-PAY - TOTAL-DEDUCTIONS
+               IF NET-PAY < 0
+                   MOVE 0 TO NET-PAY
+                   END-IF.
+                *>         COMPUTE NET-PAY = GROSS-PAY - TOTAL-DEDUCTIONS.
+
+           600-DISPLAY-RESULTS.
+               DISPLAY DEVIDER-LINE
+               MOVE EMP-NME TO RES-NAME
+               MOVE TOTAL-HOURS TO RES-HOURS
+               DISPLAY RESULT-LINE
+               DISPLAY DEVIDER-LINE
+
+               MOVE GROSS-PAY TO GROSS-AMT
+               DISPLAY GROSS-LINES
+
+               MOVE OVERTIME-PAY TO OT-AMT
+               MOVE OVERTIME-HOURS TO OT-HRS
+               DISPLAY OT-LINE
+
+               MOVE TOTAL-DEDUCTIONS TO DEDUCT-AMT
+               DISPLAY DEDUCT-LINE
+
+               MOVE NET-PAY TO NET-AMT
+               DISPLAY NET-LINE
+               DISPLAY FOOTER-LINE
+      *>          DISPLAY SPACES.
+      *>          MOVE EMP-NME TO RES-NAME.
+      *>          MOVE TOTAL-HOURS TO RES-HOURS.
+      *>          DISPLAY RESULT-LINE.
+      *>          DISPLAY SPACES.
+
+      *> *>          DISPLAY GROSS SALARY
+      *>      MOVE GROSS-PAY TO GROSS-AMT.
+      *>      DISPLAY GROSS-LINE.
+      *>      DISPLAY SPACES.
+
+      *> *>         DISPAY ALL TOTAL-DEDUCTIONS
+      *>      MOVE PAYE-TAX TO PAYE-AMT.
+      *>      MOVE UIF-CONTRIB TO UIF-AMT.
+      *>      MOVE SDL-CONTRIB TO SDL-AMT.
+      *>      DISPLAY DETAIL-LINE.
+      *>      DISPLAY SPACES.
+
+      *> *>                  DISPLAY COMPANY BENEFITS
+      *>      MOVE MEDICAL-AID TO MEDICAL-AMT.
+      *>      DISPLAY SPACES.
+      *>      MOVE PENSION-CONTRIB TO PENSION-AMT.
+      *>      DISPLAY BENEFIT-LINE.
+      *>      DISPLAY SPACES.
+
+      *> *>              DISPLAYING ALL DEDCTIONS AND NET PAY
+      *>      MOVE TOTAL-DEDUCTIONS TO DEDUCT-AMT.
+      *>      DISPLAY DEDUCT-LINE.
+
+      *>      MOVE NET-PAY TO NET-AMT.
+      *>      DISPLAY NET-LINE.
+      *>       *>DISPLAY "Hello wrld"
             STOP RUN.
-       END PROGRAM YOUR-PROGRAM-NAME.
+       END PROGRAM HIVE-HOLDINGS-PAYROLL.
