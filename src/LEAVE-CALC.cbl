@@ -143,7 +143,7 @@
               MOVE EMP-SALARY TO DISPLAY-SALARY
               MOVE LEAVE-ADJUSTMENT TO DISPLAY-ADJUST
 
-              DISPLAY " "
+           DISPLAY " "
            DISPLAY "LEAVE DEDUCTION REPORT"
            DISPLAY "-----------------------------"
            DISPLAY "EMPLOYEE: " EMP-NUMBER " - " EMP-NAME
