@@ -1,70 +1,73 @@
-IDENTIFICATION DIVISION.
-PROGRAM-ID. REGISTER-EMPLOYEE.
-ENVIRONMENT DIVISION.
-INPUT-OUTPUT SECTION.
-FILE-CONTROL.
-    SELECT EMPLOYEE-FILE ASSIGN TO "data/employees.dat"
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. REGISTER-EMPLOYEE.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+       SELECT EMPLOYEE-FILE ASSIGN TO "data/employee.dat"
         ORGANIZATION IS INDEXED
         ACCESS MODE IS DYNAMIC
         RECORD KEY IS EMP-ID
         FILE STATUS IS FS-STATUS.
 
-DATA DIVISION.
-FILE SECTION.
-FD  EMPLOYEE-FILE.
-01  EMPLOYEE-RECORD.
-    05  EMP-ID           PIC 9(5).        *> Key field (5-digit ID)
-    05  EMP-NAME         PIC X(30).
-    05  EMP-HOURLY       PIC 9(3)V99.     *> e.g., 025.00
-    05  EMP-DEPT         PIC X(20).       *> e.g., "HR"
-    05  EMP-LEAVE-BAL    PIC 999.         *> e.g., 020 days
+       DATA DIVISION.
+       FILE SECTION.
+        FD  EMPLOYEE-FILE.
+        01  EMPLOYEE-RECORD.
+           05  EMP-ID           PIC 9(5).
+           05  EMP-NAME         PIC X(30).
+           05  EMP-HOURLY       PIC 9(3)V99.
+           05  EMP-DEPT         PIC X(20).
+           05  EMP-LEAVE-BAL    PIC 999.
+           05  EMP-STATUS       PIC X(10).
 
-WORKING-STORAGE SECTION.
-01  WS-INPUT.
-    05  WS-EMP-ID        PIC 9(5).
-    05  WS-EMP-NAME      PIC X(30).
-    05  WS-HOURLY-RATE   PIC 9(3)V99.
-    05  WS-DEPT          PIC X(20).
-    05  WS-LEAVE-BAL     PIC 999.
-01  FS-STATUS          PIC XX.            *> File status codes
-    88  FILE-NOT-FOUND  VALUE "35".        *> File missing error
+         WORKING-STORAGE SECTION.
+        01  WS-INPUT.
+               05  WS-EMP-ID        PIC 9(5).
+               05  WS-EMP-NAME      PIC X(30).
+               05  WS-HOURLY-RATE   PIC 9(3)V99.
+               05  WS-DEPT          PIC X(20).
+               05  WS-LEAVE-BAL     PIC 999.
+         01  FS-EMPLOYEE         PIC XX.  *> File status
 
-PROCEDURE DIVISION.
-    PERFORM INITIALIZE-FILE
-    PERFORM GET-EMPLOYEE-DETAILS
-    PERFORM WRITE-RECORD
-    CLOSE EMPLOYEE-FILE
-    STOP RUN.
+       PROCEDURE DIVISION.
+           PERFORM CHECK-FILE-EXISTENCE
+           DISPLAY "--------------------------------------------------"
+           DISPLAY "EMPLOYEE REGISTRATION SYSTEM"
+           DISPLAY "--------------------------------------------------"
+           PERFORM GET-EMPLOYEE-DETAILS
+           PERFORM WRITE-TO-FILE
+           CLOSE EMPLOYEE-FILE
+           STOP RUN.
 
-INITIALIZE-FILE.
-    OPEN I-O EMPLOYEE-FILE
-    IF FILE-NOT-FOUND
-        OPEN OUTPUT EMPLOYEE-FILE         *> Create file if missing
-        CLOSE EMPLOYEE-FILE
-        OPEN I-O EMPLOYEE-FILE
-    END-IF.
+       CHECK-FILE-EXISTENCE.
+           OPEN I-O EMPLOYEE-FILE
+           IF FS-EMPLOYEE NOT = "00"  *> File not found
+               OPEN OUTPUT EMPLOYEE-FILE  *> Create new file
+               CLOSE EMPLOYEE-FILE
+               OPEN I-O EMPLOYEE-FILE
+           END-IF.
+       
+       GET-EMPLOYEE-DETAILS.
+           DISPLAY "Enter Employee ID (5 digits): "
+           ACCEPT WS-EMP-ID.
+           DISPLAY "Enter Employee Name: "
+           ACCEPT WS-EMP-NAME.
+           DISPLAY "Enter Hourly Rate: "
+           ACCEPT WS-HOURLY-RATE.
+           DISPLAY "Enter Department: "
+           ACCEPT WS-DEPT.
+           DISPLAY "Enter Initial Leave Balance: "
+           ACCEPT WS-LEAVE-BAL.
 
-GET-EMPLOYEE-DETAILS.
-    DISPLAY "EMPLOYEE REGISTRATION"
-    DISPLAY "----------------------"
-    DISPLAY "Enter 5-digit Employee ID: " WITH NO ADVANCING
-    ACCEPT WS-EMP-ID
-    DISPLAY "Enter Name: " WITH NO ADVANCING
-    ACCEPT WS-EMP-NAME
-    DISPLAY "Enter Hourly Rate: " WITH NO ADVANCING
-    ACCEPT WS-HOURLY-RATE
-    DISPLAY "Enter Department: " WITH NO ADVANCING
-    ACCEPT WS-DEPT
-    DISPLAY "Enter Leave Balance: " WITH NO ADVANCING
-    ACCEPT WS-LEAVE-BAL.
-
-WRITE-RECORD.
-    MOVE WS-EMP-ID TO EMP-ID
-    MOVE WS-EMP-NAME TO EMP-NAME
-    MOVE WS-HOURLY-RATE TO EMP-HOURLY
-    MOVE WS-DEPT TO EMP-DEPT
-    MOVE WS-LEAVE-BAL TO EMP-LEAVE-BAL
-    WRITE EMPLOYEE-RECORD
-        INVALID KEY DISPLAY "Error: ID ", EMP-ID, " already exists!"
-        NOT INVALID KEY DISPLAY "Employee ", EMP-NAME, " registered!"
-    END-WRITE.
+       WRITE-TO-FILE.
+           MOVE WS-EMP-ID TO EMP-ID
+           MOVE WS-EMP-NAME TO EMP-NAME
+           MOVE WS-HOURLY-RATE TO EMP-HOURLY
+           MOVE WS-DEPT TO EMP-DEPT
+           MOVE WS-LEAVE-BAL TO EMP-LEAVE-BAL
+           MOVE "ACTIVE" TO EMP-STATUS
+    
+           WRITE EMPLOYEE-RECORD
+               INVALID KEY DISPLAY "Employee ID already exists!"
+               NOT INVALID KEY DISPLAY "Registration successful!"
+           END-WRITE.    

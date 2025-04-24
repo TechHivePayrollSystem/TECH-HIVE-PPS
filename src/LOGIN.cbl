@@ -19,32 +19,32 @@
         01  FILE-STATUS       PIC XX.
 
        PROCEDURE DIVISION.
-       OPEN INPUT ADMIN-REG
+           OPEN INPUT ADMIN-REG
       *>  IF FILE-STATUS NOT = "00"
         *>  DISPLAY "No admin registered! Please register first."
        *>  CLOSE ADMIN-REG
        *>  EXIT PROGRAM
         *> END-IF.
 
-        DISPLAY " "
+            DISPLAY " "
            DISPLAY "--------------------------------------------------"
-        DISPLAY "LOGIN"
-           DISPLAY "--------------------------------------------------"
-        DISPLAY "Username: " WITH NO ADVANCING
-        ACCEPT WS-USERNAME
-         DISPLAY "Password: " WITH NO ADVANCING
-        ACCEPT WS-PASSWORD
+            DISPLAY "LOGIN"
+            DISPLAY "--------------------------------------------------"
+            DISPLAY "Username: " WITH NO ADVANCING
+           ACCEPT WS-USERNAME
+           DISPLAY "Password: " WITH NO ADVANCING
+           ACCEPT WS-PASSWORD
 
-        READ ADMIN-REG
+           READ ADMIN-REG
             AT END DISPLAY "Admin not found!"
-        END-READ
+           END-READ
 
-        IF WS-USERNAME = ADMIN-USER AND WS-PASSWORD = ADMIN-PASS
-        DISPLAY "Login successful!"
-        CALL "PAYROLL-MAIN"
-         ELSE
-        DISPLAY "Invalid credentials!"
-         END-IF
-         DISPLAY "--------------------------------------------------"
-        CLOSE ADMIN-REG
-        EXIT PROGRAM.
+           IF WS-USERNAME = ADMIN-USER AND WS-PASSWORD = ADMIN-PASS
+           DISPLAY "Login successful!"
+           CALL "PAYROLL-MAIN"
+            ELSE
+           DISPLAY "Invalid credentials!"
+            END-IF
+            DISPLAY "--------------------------------------------------"
+           CLOSE ADMIN-REG
+           EXIT PROGRAM.
