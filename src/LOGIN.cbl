@@ -19,7 +19,7 @@
         01  FILE-STATUS       PIC XX.
 
        PROCEDURE DIVISION.
-       OPEN INPUT ADMIN-REG
+           OPEN INPUT ADMIN-REG
       *>  IF FILE-STATUS NOT = "00"
         *>  DISPLAY "No admin registered! Please register first."
        *>  CLOSE ADMIN-REG
@@ -29,7 +29,7 @@
             DISPLAY " "
            DISPLAY "--------------------------------------------------"
             DISPLAY "LOGIN"
-           DISPLAY "--------------------------------------------------"
+            DISPLAY "--------------------------------------------------"
             DISPLAY "Username: " WITH NO ADVANCING
            ACCEPT WS-USERNAME
            DISPLAY "Password: " WITH NO ADVANCING
