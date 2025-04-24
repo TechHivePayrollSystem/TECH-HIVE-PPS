@@ -15,7 +15,7 @@
            DISPLAY "0. Exit"
            DISPLAY "--------------------------------------------------"
            DISPLAY "Enter your choice: " WITH NO ADVANCING
-           ACCEPT HOME-CHOICE WITH CONVERSION
+           ACCEPT HOME-CHOICE 
            ACCEPT DUMMY  *> Clear input buffer (simplified)
 
             EVALUATE HOME-CHOICE
