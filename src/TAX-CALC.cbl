@@ -1,24 +1,24 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. TAX-CALC.
-       AUTHOR. YOUR-NAME.
+       AUTHOR. TECH_HIVE.
        DATE-WRITTEN. TODAYS-DATE.
 
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-      * System Control
-       01 MENU-CHOICE          PIC 9.
-          88 VALID-CHOICE      VALUES 1 THRU 3.
-          88 EXIT-PROGRAM      VALUE 3.
-       01 USER-INPUT           PIC X.
-          88 YES-RESPONSE      VALUE 'Y', 'y'.
-          88 NO-RESPONSE       VALUE 'N', 'n'.
+       *> System Control
+         01 MENU-CHOICE          PIC 9.
+           88 VALID-CHOICE      VALUES 1 THRU 3.
+           88 EXIT-PROGRAM      VALUE 3.
+         01 USER-INPUT           PIC X.
+           88 YES-RESPONSE      VALUE 'Y', 'y'.
+           88 NO-RESPONSE       VALUE 'N', 'n'.
 
-      * Employee Type
+       *> Employee Type
        01 EMP-TYPE            PIC 9.
-          88 SALARIED         VALUE 1.
-          88 HOURLY           VALUE 2.
+           88 SALARIED         VALUE 1.
+           88 HOURLY           VALUE 2.
 
-      * Hourly Wage Data
+       *> Hourly Wage Data
        01 HOURS-WORKED        PIC 99V99 VALUE 0.
        01 REGULAR-HOURS       PIC 9(5)V99 VALUE 168.00.
        01 OVERTIME-HOURS      PIC 99V99 VALUE 0.
@@ -27,52 +27,52 @@
        01 REGULAR-PAY         PIC 9(5)V99 VALUE 0.
        01 OVERTIME-PAY        PIC 9(5)V99 VALUE 0.
 
-      * Employee Data
+       *> Employee Data
        01 EMPLOYEE-DATA.
-          05 EMP-NUMBER       PIC X(10).
-          05 EMP-NAME         PIC X(50).
-          05 EMP-SALARY       PIC 9(7)V99 VALUE 0.
+           05 EMP-NUMBER       PIC X(10).
+           05 EMP-NAME         PIC X(50).
+           05 EMP-SALARY       PIC 9(7)V99 VALUE 0.
 
-      * Tax Data
+       *> Tax Data
        01 TAX-CALC.
-          05 TAX-RATE         PIC 9(2)    VALUE 0.
-          05 TAX-AMOUNT       PIC 9(7)V99 VALUE 0.
-          05 TAX-BRACKETS.
+           05 TAX-RATE         PIC 9(2)    VALUE 0.
+           05 TAX-AMOUNT       PIC 9(7)V99 VALUE 0.
+           05 TAX-BRACKETS.
              10 BRACKET-1     PIC 9(6)    VALUE 195850.
              10 BRACKET-2     PIC 9(6)    VALUE 305850.
              10 BRACKET-3     PIC 9(6)    VALUE 423300.
              10 BRACKET-4     PIC 9(6)    VALUE 555600.
              10 BRACKET-5     PIC 9(6)    VALUE 708310.
 
-      * Deductions
+       *> Deductions
        01 DEDUCTIONS.
-          05 UIF-CONTRIB      PIC 9(5)V99 VALUE 0.
-          05 MEDICAL-AID      PIC 9(5)V99 VALUE 0.
-          05 UNION-FEE        PIC 9(3)    VALUE 50.
-          05 TOTAL-DEDUCTS    PIC 9(7)V99 VALUE 0.
-          05 BIRTHDAY-BONUS  PIC 9(4)    VALUE 500.
+           05 UIF-CONTRIB      PIC 9(5)V99 VALUE 0.
+           05 MEDICAL-AID      PIC 9(5)V99 VALUE 0.
+           05 UNION-FEE        PIC 9(3)    VALUE 50.
+           05 TOTAL-DEDUCTS    PIC 9(7)V99 VALUE 0.
+           05 BIRTHDAY-BONUS  PIC 9(4)    VALUE 500.
 
-      * Date Handling
+       *> Date Handling
        01 CURRENT-DATE.
-          05 CD-YEAR         PIC 9(4).
-          05 CD-MONTH        PIC 9(2).
-          05 CD-DAY          PIC 9(2).
+           05 CD-YEAR         PIC 9(4).
+           05 CD-MONTH        PIC 9(2).
+           05 CD-DAY          PIC 9(2).
        01 BIRTH-DATE.
-          05 BD-DAY          PIC 99.
-          05 BD-MONTH        PIC 99.
+           05 BD-DAY          PIC 99.
+           05 BD-MONTH        PIC 99.
 
-      * Display Formats
+       *> Display Formats
        01 DISPLAY-FIELDS.
-          05 DISP-SALARY     PIC Z(6)9.99.
-          05 DISP-TAX        PIC Z(6)9.99.
-          05 DISP-NET        PIC Z(6)9.99.
-          05 DISP-UIF        PIC Z(5)9.99.
-          05 DISP-MEDICAL    PIC Z(5)9.99.
-          05 DISP-REGULAR    PIC Z(5)9.99.
-          05 DISP-OVERTIME   PIC Z(5)9.99.
+           05 DISP-SALARY     PIC Z(6)9.99.
+           05 DISP-TAX        PIC Z(6)9.99.
+           05 DISP-NET        PIC Z(6)9.99.
+           05 DISP-UIF        PIC Z(5)9.99.
+           05 DISP-MEDICAL    PIC Z(5)9.99.
+           05 DISP-REGULAR    PIC Z(5)9.99.
+           05 DISP-OVERTIME   PIC Z(5)9.99.
 
        PROCEDURE DIVISION.
-      *000-MAIN-MENU.
+            *> 000-MAIN-MENU.
            PERFORM 100-INITIALIZE
            PERFORM UNTIL EXIT-PROGRAM
                DISPLAY " "
@@ -173,21 +173,21 @@
 
 
        230-CALCULATE-DEDUCTIONS.
-      * UIF Calculation (1% capped at R177.12)
+            *> UIF Calculation (1% capped at R177.12)
            IF EMP-SALARY <= 14872
                COMPUTE UIF-CONTRIB = EMP-SALARY * 0.01
-           ELSE
+             ELSE
                MOVE 177.12 TO UIF-CONTRIB
            END-IF.
-      * Medical Aid (2%)
+       *> Medical Aid (2%)
            COMPUTE MEDICAL-AID = EMP-SALARY * 0.02.
-      * Union Fee (Optional)
+       *>Union Fee (Optional)
            DISPLAY "APPLY UNION FEE OF R50? (Y/N): ".
            ACCEPT USER-INPUT.
            IF YES-RESPONSE
                ADD UNION-FEE TO TOTAL-DEDUCTS
            END-IF.
-      * Total Deductions
+       *> Total Deductions
            COMPUTE TOTAL-DEDUCTS = TAX-AMOUNT 
            + UIF-CONTRIB + MEDICAL-AID.
 

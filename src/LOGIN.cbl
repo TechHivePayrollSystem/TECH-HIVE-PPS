@@ -41,7 +41,7 @@
 
            IF WS-USERNAME = ADMIN-USER AND WS-PASSWORD = ADMIN-PASS
            DISPLAY "Login successful!"
-           CALL "PAYROLL-MAIN"
+           CALL "GEN-PAYSLIP-MENU"
             ELSE
            DISPLAY "Invalid credentials!"
             END-IF
