@@ -20,8 +20,8 @@
 
             EVALUATE HOME-CHOICE
             WHEN 1 CALL "EmployeeManager"
-            WHEN 2 CALL "PAYSLIP"
-            WHEN 0 DISPLAY "Exiting system..."
+            WHEN 2 CALL "MASTER-PAYROLL"
+            WHEN 0 CALL"HOMEPAGE" DISPLAY "Exiting system..."
             WHEN OTHER
                 DISPLAY "Invalid choice! Press Enter."
                 ACCEPT DUMMY
